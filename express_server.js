@@ -38,10 +38,11 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+
 });
 
 app.get("/urls/:id", (req, res) => {
-  let templateVars = { shortURL: req.params.id };
+  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
   if (urlDatabase[req.params.id]) {
     templateVars["longURL"] = urlDatabase[req.params.id];
   }
@@ -58,7 +59,12 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect(302, "..");
 });
 
-app.post('/')
+
+app.post('/urls/:id', (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect(302, "/urls");
+});
+
 
 app.post("/urls", (req, res) => {
   // debug statement to see POST parameters
