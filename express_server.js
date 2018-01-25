@@ -41,6 +41,10 @@ app.get("/urls/new", (req, res) => {
 
 });
 
+app.get("/urls/login", (req, res) => {
+  res.render("urls_login");
+});
+
 app.get("/urls/:id", (req, res) => {
   let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id] };
   if (urlDatabase[req.params.id]) {
@@ -56,6 +60,10 @@ app.post("/urls/:id/delete", (req, res) => {
   // console.log(req.params);
   delete urlDatabase[shortURL];
   // console.log(urlDatabase);
+  res.redirect(302, "..");
+});
+
+app.post("/urls/login", (req, res) => {
   res.redirect(302, "..");
 });
 
