@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <% include ./partials/_header%>
+  <title>TinyApp</title>
+</head>
+<body>
+
+<%= name %>
+
+
+<% for (const shortURL in urls){ %>
+
+<div>
+  <%= shortURL %>
+  <%= urls[shortURL] %>
+<form method="POST" action="/urls/<%= shortURL %>/delete"><button type='submit'>🗑</form>
+</div>
+
+<% } %>
+
+</body>
+</html>
