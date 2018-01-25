@@ -4,3 +4,14 @@
 
 </head>
 
+<% if (username) {%>
+
+<%= username %>
+
+<% }%>
+
+<form action="/login " method="POST">
+      <label >Login:</label>
+      <input name="username" placeholder="Enter a  username" style="width: 300px">
+      <input type="submit" value="Submit">
+    </form>
