@@ -17,7 +17,16 @@
   <button type='submit'>🗑</form>
 </div>
 
+<form action="/urls/<%= shortURL%>" method="GET">
+      <input type="submit" value="Update">
+    </form>
+
+
 <% } %>
+
+<form action="/urls/new " method="GET">
+      <input type="submit" value="NewURL">
+    </form>
 
 </body>
 </html>
