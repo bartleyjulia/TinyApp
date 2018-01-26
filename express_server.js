@@ -33,7 +33,7 @@ function compare(input, database){
     var x = text.search(regex);
     if (x > 0) {
       result = true;
-   }
+    }
   }
   return result;
 }
@@ -67,7 +67,8 @@ app.get("/urls", (req, res) => {
     name: "Julia",
     urls: urlDatabase,
     username: currentUser,
-    userDB: users
+    userDB: users,
+    userID: req.cookies.user_id
   };
   // console.log('urls', currentUser);
   // console.log(req.cookies);
@@ -82,7 +83,8 @@ app.get("/urls/new", (req, res) => {
   }
   templateVars = {
     username: currentUser,
-    userDB: users
+    userDB: users,
+    userID: req.cookies.user_id
   };
   res.render("urls_new", templateVars);
 });
@@ -92,26 +94,27 @@ app.get("/login", (req, res) => {
   if (req.cookies){
     currentUser = req.cookies.username;
   }
-  templateVars = {
+  let templateVars = {
     username: currentUser,
-    userDB: users
+    userDB: users,
+    userID: req.cookies.user_id
   };
   res.render("urls_login", templateVars);
 });
 
 
 app.get("/register", (req, res) => {
-  let templateVars = { userDB: users, registryError: req.cookies.registryError };
+  let templateVars = { userID: req.cookies.user_id, registryError: req.cookies.registryError };
   res.clearCookie('registryError');
   res.render("urls_register", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  var currentUser = "";
-  if (req.cookies){
-    currentUser = req.cookies.username;
-  }
-  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id], username: currentUser, userDB: users};
+  var currentUser = users[req.cookies.user_id];
+  // if (req.cookies){
+  //   currentUser = req.cookies.username;
+  // }
+  let templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id], username: currentUser, userDB: users, userID: req.cookies.user_id};
   if (urlDatabase[req.params.id]) {
     templateVars["longURL"] = urlDatabase[req.params.id];
   }
@@ -129,19 +132,21 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  if (!username) {
-    res.redirect(404);
-  }
-  res.cookie('username', username);
+  let emailtest = req.body.email;
+  let passwordtest = req.body.password;
+  if (compare(emailtest, users) === false){
+    res.cookie('registryError', "registryError");
+    res.redirect("/login");
+  } else {
+    res.cookie("user_id", users.randomID);
   // console.log(res.cookie);
   // console.log();
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  let username = req.cookies.username;
-  res.clearCookie('username');
+  let userID = req.cookies.user_id;
+  res.clearCookie('userID');
   // console.log(username);
   res.redirect('/urls');
 });
@@ -172,19 +177,19 @@ app.post("/register", (req, res) => {
     res.redirect("/register");
   }
   if (compare(emailtest, users) === false) {
-  let randomID = generateRandomString();
-  users[randomID] = { id: randomID,
-    email: req.body.email,
-    password: req.body.password};
-  res.cookie('user_id', randomID);
-  res.redirect("urls");
+    let randomID = generateRandomString();
+    users[randomID] = { id: randomID,
+      email: req.body.email,
+      password: req.body.password};
+    res.cookie('user_id', randomID);
+    res.redirect("urls");
   } else {
-  res.cookie('registryError', "registryError");
-  res.redirect("/register");
+    res.cookie('registryError', "registryError");
+    res.redirect("/register");
   }
   // console.log();
   // console.log();
-  console.log(users);
+
 });
 
 app.get("/u/:shortURL", (req, res) => {
