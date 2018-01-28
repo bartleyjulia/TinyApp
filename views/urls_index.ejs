@@ -10,23 +10,38 @@
 <% for (const shortURL in urls){ %>
 
 <div>
+<% if (!userID) { %>
+
   <%= shortURL %>
-  <%= urls[shortURL] %>
-<form method="POST" action="/urls/<%= shortURL %>/delete">
+
+<% } %>
+<% } %>
+
+
+<% if (userID) { %>
+
+<% for (const data in usersURLs) { %>
+
+<%= data %>
+
+<%= usersURLs[data] %>
+
+
+<form method="POST" action="/urls/<%= data %>/delete">
 
   <button type='submit'>🗑</form>
 </div>
 
-<form action="/urls/<%= shortURL%>" method="GET">
+<form action="/urls/<%= data %>" method="GET">
       <input type="submit" value="Update">
     </form>
 
 
 <% } %>
+<% } %>
 
 <form action="/urls/new " method="GET">
       <input type="submit" value="NewURL">
     </form>
-
 </body>
 </html>

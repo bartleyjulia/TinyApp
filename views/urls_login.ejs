@@ -6,11 +6,17 @@
 </head>
 <body>
 
+<% if (loginError) { %>
+
+<%= "Invalid email or password. Please retry" %>
+
+<% } %>
+
 <form action="/login " method="POST">
       <label >Login:</label>
-      <input name="username" placeholder="Enter a  username" style="width: 300px">
+      <input name="email" placeholder="Enter a  username" style="width: 300px">
       <label >Password:</label>
-      <input name="username" placeholder="Enter a password" style="width: 300px">
+      <input name="password" type="password" placeholder="Enter a password" style="width: 300px">
       <input type="submit" value="Submit">
     </form>
 
