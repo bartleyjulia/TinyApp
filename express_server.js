@@ -52,12 +52,29 @@ let urlDatabase = {
 };
 
 
+const ensureLoggedIn = (req, res, next) => {
+  if (res.locals.user_id)
+    return next();
+  else
+    return res.sendStatus(403);
+};
+
 
 function urlsforuserID(id) {
   let list = {};
   for ( let item in urlDatabase){
     if (id === urlDatabase[item].userid) {
       list[item] = urlDatabase[item].url;
+    }
+  }
+  return list;
+}
+
+function shortUrlsForUserID(id) {
+  let list = [];
+  for ( let item in urlDatabase){
+    if (id === urlDatabase[item].userid) {
+      list.push(item);
     }
   }
   return list;
@@ -128,7 +145,7 @@ app.get("/register", (req, res) => {
   res.render("urls_register", templateVars);
 });
 
-app.get("/urls/:id", (req, res) => {
+app.get("/urls/:id", ensureLoggedIn, (req, res) => {
   let filteredList = urlsforuserID(req.session.user_id);
   let templateVars = {
     usersURLs: filteredList,
@@ -141,10 +158,13 @@ app.get("/urls/:id", (req, res) => {
   res.render("url_show", templateVars);
 });
 
-app.post("/urls/:id/delete", (req, res) => {
+app.post("/urls/:id/delete", ensureLoggedIn, (req, res) => {
   let shortURL = req.params.id;
+  const ownedUrlThings = shortUrlsForUserID(res.locals.user_id);
+  if (!ownedUrlThings.includes(shortURL))
+    return res.sendStatus(403);
   delete urlDatabase[shortURL];
-  res.redirect(302, "..");
+  return res.redirect(302, "..");
 });
 
 app.post("/login", (req, res) => {
@@ -170,14 +190,17 @@ app.post("/logout", (req, res) => {
 });
 
 
-app.post('/urls/:id', (req, res) => {
+app.post('/urls/:id', ensureLoggedIn, (req, res) => {
+  let shortURL = req.params.id;
+  const ownedUrlThings = shortUrlsForUserID(res.locals.user_id);
+  if (!ownedUrlThings.includes(shortURL))
+    return res.sendStatus(403);
   urlDatabase[req.params.id] = { url: req.body.longURL, userid: req.session.user_id};
-  // console.log(req.session.user_id);
   res.redirect(302, "/urls");
 });
 
 
-app.post("/urls", (req, res) => {
+app.post("/urls", ensureLoggedIn, (req, res) => {
   let shortURL = generateRandomString();
   if (!urlDatabase[req.body]) {
     urlDatabase[shortURL] = { url: req.body.longURL, userid: req.session.user_id
