@@ -1,32 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <% include ./partials/_header%>
-  <title>TinyApp</title>
-</head>
-<body>
+  <html lang="en">
+  <head>
+    <% include ./partials/_header%>
+      <title>TinyApp</title>
+    </head>
+  <body style="font-size:20px; padding:50px;">
+    <% if (!userID) { %>
+      <tt>
+      <%= "login or register to see your own tinyURLs!" %>
+      </tt>
+    <% } %>
 
-<% for ( const address in urls) { %>
+    <% if (userID === urls[shortURL].userid) { %>
 
-<% if (userID === urls[shortURL].userid) { %>
+    <tt>
+      <p><%= urls[shortURL].url %><p>
+      <%= shortURL %>
+    </tt>
+  <div>
 
-<%= urls[shortURL].url %>
-<%= shortURL %>
-
-
-<form action="/urls/<%= shortURL %> " method="POST">
-      <label for="longURL">Update:</label>
-      <input id="<%= longURL %>" type="text" name="longURL" placeholder="http://" style="width: 300px">
-      <input type="submit" value="Submit">
+  <form method="POST" action="/urls/<%= shortURL %>/delete">
+  <button type='submit'>🗑</form>
+  </div>
+  <div>
+  <p>
+    <form action="/urls/<%= shortURL %> " method="POST">
+      <label for="longURL"><tt>update:</tt></label>
+        <input id="<%= longURL %>" type="text" name="longURL" placeholder=" http://" style="width: 300px">
+        <input type="submit" value="Submit">
     </form>
+  </p>
+
+  <% } %>
+
+  <% if (userID !== urls[shortURL].userid) { %>
+    <tt>
+    <%= " only the user who created that tiny URL may view it!" %>
+    </tt>
+
+  <% } %>
   </body>
-
-<% break; } %>
-
-
-<% } %>
-
-
-
-</body>
 </html>

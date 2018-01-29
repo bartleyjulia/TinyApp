@@ -8,13 +8,19 @@ const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-// var cookieSession = require('cookie-session');
+var cookieSession = require('cookie-session');
 
-// app.use(cookieSession({
-//   name: 'session',
-//   keys: [ loopdeloop ],
-//   maxAge: 24 * 60 * 60 * 1000 // 24 hours
-// }));
+app.use(cookieSession({
+  name: 'session',
+  keys: [ 'secretkey' ],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
+app.use(function(req, res, next) {
+  res.locals.user_id = req.session.user_id || false;
+  next();
+
+});
 
 app.set("view engine", "ejs");
 
@@ -40,7 +46,7 @@ function compare(input, database){
 }
 
 
-var urlDatabase = {
+let urlDatabase = {
   "b2xVn2": { url: "http://www.lighthouselabs.ca", userid: "userRandomID" },
   "9sm5xK": { url: "http://www.google.com", userid: "user2RandomID" }
 };
@@ -71,8 +77,8 @@ const users = {
 };
 
 function authenticateUser(email, password){
-  var flag = false;
-  for(var key in users){
+  let flag = false;
+  for(let key in users){
 
     if((users[key].email === email) && (bcrypt.compareSync(password, users[key].password))){
       flag = true;
@@ -85,12 +91,13 @@ function authenticateUser(email, password){
 
 
 app.get("/urls", (req, res) => {
-  let filteredList = urlsforuserID(req.cookies.user_id);
+  let filteredList = urlsforuserID(req.session.user_id);
   let templateVars = {
     urls: urlDatabase,
     userDB: users,
-    userID: req.cookies.user_id,
-    usersURLs: filteredList
+    userID: req.session.user_id,
+    usersURLs: filteredList,
+    missingURL: req.session.missingURL
   };
   res.render("urls_index", templateVars);
 });
@@ -99,37 +106,38 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   templateVars = {
     userDB: users,
-    userID: req.cookies.user_id
+    userID: req.session.user_id
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/login", (req, res) => {
   let templateVars = {
-    registryError: req.cookies.registryError,
+    registryError: req.session.registryError,
     userDB: users,
-    userID: req.cookies.user_id,
-    loginError: req.cookies.loginError
+    userID: req.session.user_id,
+    loginError: req.session.loginError
   };
   res.render("urls_login", templateVars);
 });
 
 
 app.get("/register", (req, res) => {
-  let templateVars = { userID: req.cookies.user_id, registryError: req.cookies.registryError };
-  res.clearCookie('registryError');
+  let templateVars = { userID: req.session.user_id, registryError: req.session.registryError };
+  res.session = null;
   res.render("urls_register", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  let filteredList = urlsforuserID(req.cookies.user_id);
+  let filteredList = urlsforuserID(req.session.user_id);
   let templateVars = {
     usersURLs: filteredList,
     shortURL: req.params.id,
     longURL: urlDatabase[req.params.id]["url"],
     urls: urlDatabase,
     userDB: users,
-    userID: req.cookies.user_id};
+    userID: req.session.user_id};
+  console.log("session", req.session.user_id);
   res.render("url_show", templateVars);
 });
 
@@ -145,30 +153,26 @@ app.post("/login", (req, res) => {
   let test = authenticateUser(emailtest, passwordtest);
   let user = compare(emailtest, users);
   if (user === null){
-    res.cookie('loginError', "loginError");
+    req.session.loginError = "loginError";
     res.redirect("/login");
   } else if (test === false){
-    res.cookie('loginError', "loginError");
+    req.loginError = "loginError";
     res.redirect("/login");
   } else {
-    res.cookie("user_id", user);
+    req.session.user_id = user;
     res.redirect("/urls");
   }
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  req.session.user_id = null;
   res.redirect('/urls');
 });
 
 
 app.post('/urls/:id', (req, res) => {
-  urlDatabase[req.params.id] = { url: req.body.longURL, userid: req.cookies.user_id};
-  console.log(req.params.id);
-  console.log(req.body);
-  console.log(req.body.longURL);
-  console.log(req.cookies.user_id);
-
+  urlDatabase[req.params.id] = { url: req.body.longURL, userid: req.session.user_id};
+  // console.log(req.session.user_id);
   res.redirect(302, "/urls");
 });
 
@@ -176,23 +180,21 @@ app.post('/urls/:id', (req, res) => {
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString();
   if (!urlDatabase[req.body]) {
-    urlDatabase[shortURL] = { url: req.body.longURL, userid: req.cookies.user_id
+    urlDatabase[shortURL] = { url: req.body.longURL, userid: req.session.user_id
     };
   }
   res.redirect(302, `urls/${shortURL}`);
 });
 
 app.post("/register", (req, res) => {
-  let emailtest = req.body.email;
-  let passwordtest = req.body.password;
-  if (!emailtest || !passwordtest ){
-    res.cookie('registryError', "registryError");
-    res.redirect("/register");
-  }
+  let email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
-  let user = compare(emailtest, users);
-  if ( user === null) {
+  let user = compare(email, users);
+  if (!email || !password ){
+    req.session.registryError = 'registryError';
+    res.redirect("/register");
+  } else if ( user === null) {
     let randomID = generateRandomString();
     let newUser = {
       id: randomID,
@@ -201,10 +203,10 @@ app.post("/register", (req, res) => {
     };
     console.log(newUser);
     users[randomID] = newUser;
-    res.cookie('user_id', randomID);
-    res.redirect("urls");
+    req.session.user_id = randomID;
+    res.redirect("/urls");
   } else {
-    res.cookie('registryError', "registryError");
+    req.session.registryError = "registryError";
     res.redirect("/register");
   }
 
@@ -212,7 +214,11 @@ app.post("/register", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   let shorterURL = req.params['shortURL'];
-  let longURL = urlDatabase[shorterURL];
+  if (!urlDatabase[shorterURL]) {
+    req.session.missingURL = 'missingURL';
+    res.redirect(302, '/urls');
+  }
+  let longURL = urlDatabase[shorterURL].url;
   res.redirect(302, longURL);
 });
 

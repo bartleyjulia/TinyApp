@@ -1,18 +1,23 @@
-<head>
-
-<h1> Tiny App </h1>
-
-</head>
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <% include ./partials/_header%>
+    <title>TinyApp</title>
+  </head>
+  <body style="font-size:20px; padding:50px;">
 
 <% if (registryError) { %>
 
-<%= "Invalid email or password. Please retry" %>
+<tt>
+<%= "invalid email or password. please retry" %>
+</tt>
 
 <% } %>
+
 <form action="/register " method="POST">
-      <label >Email:</label>
-      <input name="email" placeholder="Enter an email" style="width: 300px">
-      <label >Password:</label>
-      <input name="password" type="password" placeholder="Enter a password" style="width: 300px">
-      <input type="submit" value="Submit">
-    </form>
+  <label ><tt>email:</tt></label>
+    <input name="email"  style="width: 300px">
+      <label ><tt>password:</tt></label>
+      <input name="password" type="password" style="width: 300px">
+    <input type="submit" value="Submit">
+</form>

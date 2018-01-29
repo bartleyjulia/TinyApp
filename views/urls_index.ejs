@@ -4,28 +4,39 @@
    <% include ./partials/_header%>
   <title>TinyApp</title>
 </head>
-<body>
-
+<body style="font-size:20px; padding:50px;">
 
 <% for (const shortURL in urls){ %>
+<div><p>
+<% if (!userID) { %>
+<tt>
+  <%= shortURL %>
+</tt>
+</p>
+<% } %>
+<% } %>
 
 <div>
-<% if (!userID) { %>
-
-  <%= shortURL %>
-
+<% if (missingURL) { %>
+<tt>
+<%= "sorry! that tiny URL does not exist!"  %>
+</tt>
 <% } %>
-<% } %>
+
+<div>
+
 
 
 <% if (userID) { %>
 
 <% for (const data in usersURLs) { %>
 
+<tt>
 <%= data %>
 
 <%= usersURLs[data] %>
 
+</tt>
 
 <form method="POST" action="/urls/<%= data %>/delete">
 
